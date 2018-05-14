@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class DateProcess {
     public static void main(String[] args) {
-        String dataPath = "E:\\工作\\九州通\\one_year_data\\data_1704_1804_511_fix.xlsx";
+        String dataPath = "E:\\work\\Join\\one_year_data\\data_1704_1804_511_fix.xlsx";
         String resouresRoot = "E:\\myProject\\nlp-ml-dl-rl\\nlp-ml\\src\\main\\resources\\Jointown\\";
         ReadExcel readExcel = new ReadExcel();
         JZTData jztData = readExcel.readXls(dataPath);
