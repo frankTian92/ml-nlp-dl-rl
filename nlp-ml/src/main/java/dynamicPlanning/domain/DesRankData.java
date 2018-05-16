@@ -1,4 +1,4 @@
-package dynamicPlanning;
+package dynamicPlanning.domain;
 
 /**
  * 目的地和装车顺序

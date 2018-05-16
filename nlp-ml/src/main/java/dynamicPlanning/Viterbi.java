@@ -10,92 +10,120 @@ import java.util.List;
  * Created by stormor on 2017/11/9.
  * 维特比动态规划算法
  */
-public class Viterbi  {
+public class Viterbi {
 
-  //排序后的各个结果
+    //排序后的各个结果
     private List<ViterBiData> rankReslut;
 
 
     /**
      * 对序列orig_seq进行最有路径排序，运用维特比算法
      *
-     * @param orig_seq 原始序列：待排序的序列
-     * @param trans_p_arr2 转移概率矩阵：边长为词典的正方形矩阵
-     * @param start_p_arr1  初始概率：长度等于词典长度
+     * @param orig_seq    原始序列：待排序的序列
+     * @param trans_p_arr 转移概率矩阵：边长为词典的正方形矩阵
      * @return
      */
-    public ViterBiData computer(Integer[] orig_seq, INDArray trans_p_arr2, INDArray start_p_arr1) {
+    public ViterBiData computer(Integer[] orig_seq, INDArray trans_p_arr) {
         List<ViterBiData> rankReslut = new ArrayList<ViterBiData>();
         int origSeqSize = orig_seq.length;
 //        int dictSize = start_p_arr1.length();
 
-        // 路径概率表 V[原始序列][词典宽度] = 概率
-        double[][] V = new double[origSeqSize][origSeqSize];
-        // 一个中间变量，代表当前序列是哪个词典对于的值
+        // 路径序列表 V[原始序列][原始序列]
         int[][] path = new int[origSeqSize][origSeqSize];
-
-        //第一次的初始概率
-        for (int i = 0; i<origSeqSize;i++){
-            V[0][i] = start_p_arr1.getDouble(0,orig_seq[i]);
-            path[i][0] = orig_seq[i];
-        }
-
-
-
-        for (int t = 1; t < origSeqSize; t++) {
-            int[][] newpath = new int[origSeqSize][origSeqSize];
-
-            for (int y = 0; y<origSeqSize;y++) {
-                double prob = -1;
-                int state;
-                for (int y0 = 0; y0<origSeqSize;y0++) {
-                    double nprob = V[t - 1][y0] * trans_p_arr2.getDouble(orig_seq[y0],orig_seq[y]);
-                    if (nprob > prob) {
-                        prob = nprob;
-                        state = y0;
-                        // 记录最大概率
-                        V[t][y] = prob;
-                        // 记录路径
-                        System.arraycopy(path[state], 0, newpath[y], 0, t);
-                        newpath[y][t] = orig_seq[y];
-                    }
+        //初始化第一列,其余的序列均为-1
+        for (int i = 0; i < origSeqSize; i++) {
+            for (int j = 0;j<origSeqSize;j++){
+                if (i==0){
+                    path[j][i] = orig_seq[j];
+                }else {
+                    path[j][i]=-1;
                 }
             }
 
-            path = newpath;
-
         }
 
-        double prob = -1;
-        int state = 0;
-        for (int y = 0; y<origSeqSize;y++) {
-            ViterBiData viterBiData = new ViterBiData();
-            viterBiData.setProbility(V[origSeqSize - 1][y]);
-            viterBiData.setSeqRank(path[y]);
-            rankReslut.add(viterBiData);
 
-            if (V[origSeqSize - 1][y] > prob) {
-                prob = V[origSeqSize - 1][y];
-                state = y;
+        // 一个中间变量，代表当前序列最大的概率值
+        double[] maxProb = new double[origSeqSize];
+        //初始化最大概率
+        for (int i = 0; i < origSeqSize; i++) {
+            maxProb[i] = 1.0;
+        }
+
+
+        //对每个跨度进行排序，选出每种概率最大的排序，并记录下该序列
+        for (int t = 1; t < origSeqSize; t++) {
+            //对每个节点对其他节点进行全排序，并计算概率,将概率最大的序列及概率值添加到对应的值中
+            for (int y = 0; y < origSeqSize; y++) {
+                int state = 0;
+                double prob = -1;
+                int[] seq_y = path[y];
+                int orig_node = seq_y[t-1];
+                for (int y0 = 0; y0 < origSeqSize; y0++) {
+                    //排除“两个节点相同的情况”及“已经在序列中的节点”
+                    int next_node = orig_seq[y0];
+                    if (orig_node != next_node && !isIn(seq_y,next_node)) {
+                        double y_y0_prob = maxProb[y] * trans_p_arr.getDouble(orig_node, next_node);
+                        if (y_y0_prob > prob) {
+                            prob = y_y0_prob;
+                            state = next_node;
+                        }
+                    }
+                }
+                path[y][t] = state;
+                maxProb[y] = prob;
+
+            }
+        }
+
+        double max_prob = -1;
+        int[] best_seq = new int[origSeqSize];
+        for (int i = 0; i < origSeqSize; i++) {
+            ViterBiData viterBiData = new ViterBiData();
+            viterBiData.setProbility(maxProb[i]);
+            viterBiData.setSeqRank(path[i]);
+            rankReslut.add(viterBiData);
+            if (maxProb[i] > max_prob) {
+                max_prob = maxProb[i];
+                best_seq = path[i];
             }
         }
 
         this.rankReslut = rankReslut;
         ViterBiData bestViterBiData = new ViterBiData();
-        bestViterBiData.setProbility(prob);
-        bestViterBiData.setSeqRank(path[state]);
+        bestViterBiData.setProbility(max_prob);
+        bestViterBiData.setSeqRank(best_seq);
         return bestViterBiData;
+    }
+
+    /**
+     * 判断该数字是否在数组中
+     *
+     * @param nums
+     * @param num
+     * @return
+     */
+    private boolean isIn(int[] nums, int num) {
+        boolean isIn = false;
+        for (int nu : nums) {
+            if (nu == num) {
+                isIn = true;
+                break;
+            }
+        }
+        return isIn;
     }
 
 
     /**
      * 只有先进行computer计算才能获得该数据
+     *
      * @return
      */
     public List<ViterBiData> getRankReslut() {
-        if (rankReslut.size()>0){
+        if (rankReslut.size() > 0) {
             return rankReslut;
-        }else {
+        } else {
             System.out.println("Please compute before!!!");
             return null;
         }

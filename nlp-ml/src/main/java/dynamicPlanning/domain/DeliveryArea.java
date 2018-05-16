@@ -1,4 +1,6 @@
-package dynamicPlanning;
+package dynamicPlanning.domain;
+
+import dynamicPlanning.Constant;
 
 /**
  * 构建配送范围
@@ -13,7 +15,12 @@ public enum DeliveryArea {
     /**
      * 市外配送
      */
-    OUTER_CITY_DELIVERY(2);
+    OUTER_CITY_DELIVERY(2),
+
+    /**
+     * 即参与过"市内配送"也参与过“市外配送”
+     */
+    MIXTURE_CITY_DELIVERY(3);
 
     /**
      * 定义私有变量
@@ -30,7 +37,7 @@ public enum DeliveryArea {
         return String.valueOf(this.deliveryAreaNum);
     }
 
-    public int index(){
+    public int index() {
         return deliveryAreaNum;
     }
 
@@ -57,15 +64,16 @@ public enum DeliveryArea {
 
     /**
      * 获得对应的中文名称
+     *
      * @param deliveryAreaNum
      * @return
      */
-    public static String getDeliveryAreaName(int deliveryAreaNum){
-        if (deliveryAreaNum==1){
+    public static String getDeliveryAreaName(int deliveryAreaNum) {
+        if (deliveryAreaNum == 1) {
             return Constant.INNER_CITY_DELIVERY;
-        }else if(deliveryAreaNum==2){
+        } else if (deliveryAreaNum == 2) {
             return Constant.OUTER_CITY_DELIVERY;
-        }else {
+        } else {
             return null;
         }
     }

@@ -2,19 +2,22 @@ package dynamicPlanning;
 
 
 import Util.ReadWriteTxtUtil;
+import dynamicPlanning.domain.DeliveryArea;
+import dynamicPlanning.domain.DesRankData;
+import dynamicPlanning.domain.JZTData;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class DateProcess {
     public static void main(String[] args) {
-        String dataPath = "E:\\work\\Join\\one_year_data\\data_1704_1804_511_fix.xlsx";
-        String resouresRoot = "E:\\myProject\\nlp-ml-dl-rl\\nlp-ml\\src\\main\\resources\\Jointown\\";
-        ReadExcel readExcel = new ReadExcel();
-        JZTData jztData = readExcel.readXls(dataPath);
+        String dataPath = "E:\\work\\Join\\one_year_data\\csv";
+        String resouresRoot = "D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\Jointown\\";
+        ReadCsv readCsv = new ReadCsv();
+        JZTData jztData = readCsv.readCsv(dataPath);
         HashMap<String, List<DesRankData>> data = jztData.getTruckIDAndDestList();
         System.out.println("总条数 = " + data.size());
-        System.out.println("地点总数 = " + jztData.desIndexMap.size());
+        System.out.println("地点总数 = " + jztData.getDesIndexMap().size());
         List<HashMap<String, List<Integer>>> splitAndSortData_inner = splitAndSort(0.99, data, 1,jztData);
         HashMap<String, List<Integer>> trainData_inner = splitAndSortData_inner.get(0);
         HashMap<String, List<Integer>> testData_inner = splitAndSortData_inner.get(1);
@@ -125,7 +128,7 @@ public class DateProcess {
         System.out.println("每车只有一个地方的单数 = " + oneMap.size());
         System.out.println("每车只有一个地方的所占比例 = " + (oneMap.size()/(totalMap.size()+0.0)));
         System.out.println("‘" + DeliveryArea.getDeliveryAreaName(deliveryAreaType) +"’的总数 = " +totalMap.size() + ",所占的总体比例 = " + totalMap.size()/(map.size()+0.0));
-        WriteExcel.writeExcelData(filterData,"E:\\myProject\\nlp-ml-dl-rl\\nlp-ml\\src\\main\\resources\\Jointown\\differentArea.xls",jztData.getDesIndexCodeMap(),jztData.getDesIdAndNameMap());
+        WriteExcel.writeExcelData(filterData,"D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\Jointown\\differentArea.xls",jztData.getDesIndexCodeMap(),jztData.getDesIdAndNameMap());
         map.clear();
         return list;
     }

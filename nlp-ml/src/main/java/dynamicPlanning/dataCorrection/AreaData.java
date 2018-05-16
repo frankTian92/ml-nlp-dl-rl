@@ -1,9 +1,8 @@
 package dynamicPlanning.dataCorrection;
 
 import dynamicPlanning.Constant;
-import dynamicPlanning.DeliveryArea;
+import dynamicPlanning.domain.DeliveryArea;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -17,8 +16,8 @@ import java.util.Date;
  * \用于表示“市内”和“市外”每个地点的统计量，用于每个地点提货方式纠错
  */
 public class AreaData {
-    //单位编号
-    private String desCode;
+    //配送地址唯一标识
+    private int deliveryUniqueIdentif;
 
     //该单位属于市内提货的个数
     private int innerCount;
@@ -29,14 +28,9 @@ public class AreaData {
     //相对新的世界
     private Date thresholdTime = initDate(3);
 
-    public AreaData(String desCode, int innerCount, int outerCount) {
-        this.desCode = desCode;
-        this.innerCount = innerCount;
-        this.outerCount = outerCount;
-    }
 
-    public AreaData(String desCode) {
-        this.desCode = desCode;
+    public AreaData(Integer deliveryUniqueIdentif) {
+        this.deliveryUniqueIdentif = deliveryUniqueIdentif;
         this.innerCount = 0;
         this.outerCount = 0;
     }
@@ -46,7 +40,7 @@ public class AreaData {
      *
      * @param deliveryString
      */
-    public void update(String deliveryString, String desName ,String location, Date date) {
+    public void update(String deliveryString,Date date) {
         if (deliveryString.equals(Constant.INNER_CITY_DELIVERY)) {
             this.innerCount += 1;
             //根据“配送时间”，对距离近的“配送方式”做加权处理
@@ -60,20 +54,6 @@ public class AreaData {
                 this.outerCount+=1;
             }
         }
-
-        //根据“单位名称”对“提货方式”进行加权
-        if (desName!=null && desName.contains("武汉")){
-            this.innerCount+=1;
-        }
-
-        //根据“配送地址名称”对“提货方式”进行加权处理
-
-        if (location!=null && location.contains("武汉")){
-            this.innerCount += 5;
-        }
-
-
-
 
 
     }
@@ -89,6 +69,19 @@ public class AreaData {
         } else return DeliveryArea.OUTER_CITY_DELIVERY.index();
     }
 
+    /**
+     * 获取“配送地址唯一标识”的“提货类型”，主要分为三种，"市内配送、市外配送、即参与市内配送也参与市外配送"
+     * @return
+     */
+    public int getDeliveryAreaType(){
+        if (this.innerCount==0 && this.outerCount>0){
+            return DeliveryArea.OUTER_CITY_DELIVERY.index();
+        }else if(this.innerCount>0 && this.outerCount==0){
+            return DeliveryArea.INNER_CITY_DELIVERY.index();
+        }else {
+            return DeliveryArea.MIXTURE_CITY_DELIVERY.index();
+        }
+    }
 
     /**
      * 获得前三个月的日期

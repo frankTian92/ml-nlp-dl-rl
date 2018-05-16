@@ -1,4 +1,4 @@
-import dynamicPlanning.DeliveryArea;
+import dynamicPlanning.domain.DeliveryArea;
 import org.junit.Test;
 
 /**

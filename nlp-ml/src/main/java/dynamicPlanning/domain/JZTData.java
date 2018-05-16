@@ -1,7 +1,8 @@
-package dynamicPlanning;
+package dynamicPlanning.domain;
+
+import dynamicPlanning.domain.DesRankData;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 public class JZTData {

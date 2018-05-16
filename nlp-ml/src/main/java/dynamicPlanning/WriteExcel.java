@@ -1,6 +1,7 @@
 package dynamicPlanning;
 
-import eventTrack.DcData;
+import dynamicPlanning.domain.DeliveryArea;
+import dynamicPlanning.domain.DesRankData;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -33,7 +34,7 @@ public class WriteExcel {
      * @param desIndexNameMap
      */
     public static void writeExcelData(HashMap<String,List<DesRankData>> dataList, String savePath,
-                               HashMap<Integer,String> desIndexCodeMap,HashMap<Integer,String> desIndexNameMap){
+                                      HashMap<Integer,String> desIndexCodeMap, HashMap<Integer,String> desIndexNameMap){
         String[] title = {"装车单号","单位编号","单位名称","装车单装车顺序","提货方式"};
         OutputStream out = null;
         try {

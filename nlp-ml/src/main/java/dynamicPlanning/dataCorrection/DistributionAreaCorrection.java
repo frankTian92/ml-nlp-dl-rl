@@ -29,13 +29,13 @@ public class DistributionAreaCorrection {
      */
     public void update(String desCode, String deliveryString,String desName, String location, Date date){
         if (desCodeMap.isEmpty() || !desCodeMap.containsKey(desCode)){
-            AreaData areaData = new AreaData(desCode);
-            areaData.update(deliveryString,desName,location,date);
-            desCodeMap.put(desCode,areaData);
+//            AreaData areaData = new AreaData(desCode);
+//            areaData.update(deliveryString,date);
+//            desCodeMap.put(desCode,areaData);
         }else if(desCodeMap.containsKey(desCode)){
-            AreaData areaData = desCodeMap.get(desCode);
-            areaData.update(deliveryString,desName,location,date);
-            desCodeMap.put(desCode,areaData);
+//            AreaData areaData = desCodeMap.get(desCode);
+//            areaData.update(deliveryString,desName,location,date);
+//            desCodeMap.put(desCode,areaData);
         }
     }
 
