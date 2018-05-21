@@ -25,3 +25,5 @@ nlp-ml/target/
 *.iml
 *.ipr
 *.iws
+*.txt
+*.xls

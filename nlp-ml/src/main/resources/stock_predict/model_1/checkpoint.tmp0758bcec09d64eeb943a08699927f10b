@@ -1,0 +1,2 @@
+model_checkpoint_path: "D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\model_1\\stock.model"
+all_model_checkpoint_paths: "D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\model_1\\stock.model"
