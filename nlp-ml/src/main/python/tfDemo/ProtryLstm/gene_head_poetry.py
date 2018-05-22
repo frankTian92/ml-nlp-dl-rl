@@ -158,8 +158,9 @@ def gen_head_poetry(heads, type):
 
             sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver(tf.global_variables())
-            saver.restore(sess,
-                          'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\poetry.model')
+            module_file = tf.train.latest_checkpoint(
+                'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\')
+            saver.restore(sess,module_file)
             poem = ''
             for head in heads:
                 flag = True
