@@ -149,9 +149,11 @@ def load_model(sess, saver, ckpt_path):
 def train_neural_network():
     logits, last_state, _, _, _ = neural_network()
     targets = tf.reshape(output_targets, [-1])
+    # 交叉熵的和
     loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example([logits], [targets],
                                                               [tf.ones_like(targets, dtype=tf.float32)], len(words))
     cost = tf.reduce_mean(loss)
+    # 使用剪纸的adam优化器
     learning_rate = tf.Variable(0.0, trainable=False)
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(tf.gradients(cost, tvars), 5)
@@ -173,15 +175,15 @@ def train_neural_network():
             for epoch in range(last_epoch + 1, 2):
                 sess.run(tf.assign(learning_rate, 0.002 * (0.97 ** epoch)))
                 all_loss = 0.0
-                for batche in range(n_chunk):
+                for batch in range(n_chunk):
                     x, y = trainds.next_batch(batch_size)
                     train_loss, _, _ = sess.run([cost, last_state, train_op],
                                                 feed_dict={input_data: x, output_targets: y})
 
                     all_loss = all_loss + train_loss
 
-                    if batche % 50 == 1:
-                        print(epoch, batche, 0.002 * (0.97 ** epoch), train_loss)
+                    if batch % 50 == 1:
+                        print(epoch, batch, 0.002 * (0.97 ** epoch), train_loss)
 
                 saver.save(sess,
                            'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\poetry.module',

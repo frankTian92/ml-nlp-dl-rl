@@ -44,7 +44,7 @@ class StockModel(object):
         self._build_graph()
 
         # save info
-        self.saver = tf.train.Saver(tf.global_variables())
+        self.saver = tf.train.Saver()
 
         # initialize the model
         self.sess.run(tf.global_variables_initializer())
@@ -193,7 +193,7 @@ class StockModel(object):
         prev_seq = self.train_x[-1]
         predict = []
         # 得到之后100个预测结果
-        for epoch in range(1000):
+        for epoch in range(predict_num):
             next_seq = self._predict_epoch([prev_seq])
             predict.append(next_seq[-1])
             # 每次得到最后一个时间步的预测结果，与之前的数据加在一起，形成新的测试样本
@@ -203,6 +203,8 @@ class StockModel(object):
         plt.plot(list(range(len(self.data))), self.data, color='b')
         plt.plot(list(range(len(self.data), len(self.data) + len(predict))), predict, color='r')
         plt.show()
+        print(prev_seq)
+        print(predict)
 
         # 模型保存
 
@@ -213,5 +215,5 @@ class StockModel(object):
 
 if __name__ == '__main__':
     stock_model = StockModel(5)
-    stock_model.train_lstm(20)
-    stock_model.prediction(20)
+    # stock_model.train_lstm(20)
+    stock_model.prediction(1)
