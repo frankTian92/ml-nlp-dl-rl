@@ -14,7 +14,7 @@ input_size = 7
 output_size = 1
 lr = 0.0006  # 学习率
 # ——————————————————导入数据——————————————————————
-f = open('D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\dataset_2.csv')
+f = open('D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\data\\dataset_2.csv')
 df = pd.read_csv(f)  # 读入股票数据
 data = df.iloc[:, 2:10].values  # 取第3-10列
 
@@ -98,10 +98,10 @@ def train_lstm(batch_size=80, time_step=15, train_begin=2000, train_end=5800):
     train_op = tf.train.AdamOptimizer(lr).minimize(loss)
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=15)
     #加载上次的训练的模型运用该模型的初始化
-    module_file = tf.train.latest_checkpoint("D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\stock.model")
+    # module_file = tf.train.latest_checkpoint("D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\model_2\\")
     with tf.Session() as sess:
-        # sess.run(tf.global_variables_initializer())
-        saver.restore(sess, module_file)
+        sess.run(tf.global_variables_initializer())
+        # saver.restore(sess, module_file)
         # 重复训练10000次
         for i in range(2000):
             for step in range(len(batch_index) - 1):
@@ -110,7 +110,7 @@ def train_lstm(batch_size=80, time_step=15, train_begin=2000, train_end=5800):
             print(i, loss_)
             if i % 200 == 0:
                 print("保存模型：", saver.save(sess,
-                                          'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\stock2.model',
+                                          'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\stock_predict\\model_2\\',
                                           global_step=i))
 
 

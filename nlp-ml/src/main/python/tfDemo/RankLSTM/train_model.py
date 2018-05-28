@@ -2,13 +2,9 @@
 # -*- coding: UTF-8 -*-
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib as tc
 import time
+from src.main.python.tfDemo.RankLSTM.DataSet import DataSet
 
-'''
-author: log16
-Data: 2017/5/4
-'''
 # -------------------------------数据预处理---------------------------#
 
 poetry_file = 'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\demo_data\\rank.txt'
@@ -23,18 +19,28 @@ with open(poetry_file, "rb") as f:
             rank = line.split(u',')
             if len(rank) < 2:
                 continue
-            if rank not in rank_list:
-                rank_list.append(rank)
+
 
             if len(rank) > 2:
                 for i in range(len(rank) - 2):
                     rank_sub_1 = rank[(i + 1):]
+                    rank_sub_1.append("end")
                     if rank_sub_1 not in rank_list:
                         rank_list.append(rank_sub_1)
+
                     rank_sub_2 = rank[i:(i + 2)]
+                    rank_sub_2.append("end")
                     if rank_sub_2 not in rank_list:
                         rank_list.append(rank_sub_2)
-                    rank_list.append()
+
+                rank.append("end")
+                if rank not in rank_list:
+                    rank_list.append(rank)
+
+            else:
+                rank.append("end")
+                if rank not in rank_list:
+                    rank_list.append(rank)
 
         except Exception as e:
             pass
@@ -42,52 +48,17 @@ with open(poetry_file, "rb") as f:
 print('排序总数: ', len(rank_list))
 
 # 构建词典
-words = ["a", "b", "c", "d", "e"]
+words = ["a", "b", "c", "d", "e","end"]
 
 # 每个字映射为一个数字ID
 word_num_map = dict(zip(words, range(len(words))))
-# 把诗转换为向量形式，参考TensorFlow练习1  
+# 把诗转换为向量形式，参考TensorFlow练习1
 to_num = lambda word: word_num_map.get(word, len(words))
 ranks_vector = [list(map(to_num, ranks)) for ranks in rank_list]
 
-# 每次取64首诗进行训练  
-batch_size = 1
-
-
-class DataSet(object):
-    def __init__(self, data_size):
-        self._data_size = data_size
-        self._epochs_completed = 0
-        self._index_in_epoch = 0
-        self._data_index = np.arange(data_size)
-
-    def next_batch(self):
-        data_size = len(ranks_vector)
-        indices = np.arange(data_size)
-        np.random.shuffle(indices)
-
-        for batch_start in np.arange(0, data_size, batch_size):
-            batch_data_result = {}
-            batch_indices = indices[batch_start: batch_start + batch_size]
-            batch_data = [ranks_vector[i] for i in batch_indices]
-            batct_data_np = np.array(batch_data)
-            # for row in range(batch_size):
-            #      batct_data_np[row, :len(batch_data[row])] = batch_data[row]
-            xdata = batct_data_np[:, :-1]
-            ydata = batct_data_np[:, 1:]
-            # x_seq_length = [len(i) for i in xdata]
-            batch_data_result["xdata"] = xdata
-            batch_data_result["ydata"] = ydata
-            # batch_data_result["x_seq_length"] = x_seq_length
-
-            yield batch_data_result
-
-
-# ---------------------------------------RNN--------------------------------------#
-
 
 class LSTMDemo(object):
-    def __init__(self, vocab,is_training):
+    def __init__(self, vocab,is_training,batch_size):
 
         # session info
         sess_config = tf.ConfigProto()
@@ -98,11 +69,10 @@ class LSTMDemo(object):
         # the vocab
         self.vocab = vocab
         self.is_training = is_training
-        self.rnn_size = 50
-        self.num_layers = 5
-        self.batch_size = 1
+        self.rnn_size = 64
+        self.num_layers = 6
+        self.batch_size = batch_size
         self.keep_prob = 1.0
-
         self._build_graph()
 
         # save info
@@ -130,8 +100,8 @@ class LSTMDemo(object):
         """
         Placeholders
         """
-        self.input_data = tf.placeholder(tf.int32, [batch_size, None], name="input_data")
-        self.output_targets = tf.placeholder(tf.int32, [batch_size, None], name="output_targets")
+        self.input_data = tf.placeholder(tf.int32, [self.batch_size, None], name="input_data")
+        self.output_targets = tf.placeholder(tf.int32, [self.batch_size, None], name="output_targets")
         # self.input_data_seq_length = tf.placeholder(tf.float32, batch_size, name="input_data_seq_length")
 
     def _embed(self):
@@ -153,7 +123,8 @@ class LSTMDemo(object):
     def _neural_network(self):
 
         cell_fun = tf.nn.rnn_cell.BasicLSTMCell
-        cell = cell_fun(self.rnn_size, state_is_tuple=True)
+        # cell_fun = tf.nn.rnn_cell.GRUCell
+        cell = cell_fun(self.rnn_size)
         if self.is_training and self.keep_prob<1:
              cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=self.keep_prob)
         rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cell] * self.num_layers, state_is_tuple=True)
@@ -161,8 +132,8 @@ class LSTMDemo(object):
         outputs, last_state = tf.nn.dynamic_rnn(rnn_cells, self.input, dtype=tf.float32, scope='rnnlm')
 
         with tf.variable_scope('rnnlm'):
-            softmax_w = tf.get_variable("softmax_w", [self.rnn_size, len(words)])
-            softmax_b = tf.get_variable("softmax_b", [len(words)])
+            softmax_w = tf.get_variable("softmax_w", [self.rnn_size, len(self.vocab)])
+            softmax_b = tf.get_variable("softmax_b", [len(self.vocab)])
 
         output = tf.reshape(outputs, [-1, self.rnn_size])
 
@@ -176,7 +147,7 @@ class LSTMDemo(object):
         # 交叉熵的和
         loss_sum = tf.contrib.legacy_seq2seq.sequence_loss_by_example([self.logits], [targets],
                                                                       [tf.ones_like(targets, dtype=tf.float32)],
-                                                                      len(words))
+                                                                      len(self.vocab))
         self.loss = tf.reduce_mean(loss_sum)
         self.all_params = tf.trainable_variables()
 
@@ -202,16 +173,22 @@ class LSTMDemo(object):
             return -1
 
     # 训练
-    def train_neural_network(self, epoches):
-        trainds = DataSet(len(ranks_vector))
-        ckpt_path = 'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\'
-        last_epoch = self.load_model(ckpt_path)
+    def train_neural_network(self,train_datas,epoches,isReTrain):
 
-        min_loss = 100.0
+        ckpt_path = 'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\'
+        if isReTrain:
+            latest_ckpt = tf.train.latest_checkpoint(ckpt_path)
+            self.saver = tf.train.import_meta_graph(latest_ckpt + ".meta")
+            self.saver.restore(self.sess, latest_ckpt)
+            last_epoch = int(latest_ckpt[latest_ckpt.rindex('-') + 1:])
+        else:
+            last_epoch = self.load_model(ckpt_path)
+
+        min_loss = 2.59
         for epoch in range(last_epoch + 1, epoches):
-            self.sess.run(tf.assign(self.learning_rate, 0.02 * (0.97 ** epoch)))
-            all_loss = 0.0
-            train_batch = trainds.next_batch()
+            self.sess.run(tf.assign(self.learning_rate,0.00002))
+            all_loss = 10
+            train_batch = train_datas.next_batch(self.batch_size)
             for batch_num, batch_data in enumerate(train_batch):
                 train_loss, _, lr = self.sess.run([self.loss, self.train_op, self.learning_rate],
                                                   feed_dict={self.input_data: batch_data["xdata"],
@@ -222,12 +199,13 @@ class LSTMDemo(object):
 
                 all_loss = all_loss + train_loss
 
-            if (all_loss < min_loss):
-                min_loss = all_loss
+            if (all_loss * 1.0 / (batch_num + 1) * self.batch_size < min_loss):
+                min_loss = all_loss * 1.0 / (batch_num + 1) * self.batch_size
                 self.saver.save(self.sess,
                                 'D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\poetry.module',
                                 global_step=epoch)
-            print(epoch, 'lr: ', lr, ' Loss: ', all_loss * 1.0 / (batch_num + 1) * batch_size)
+            print(epoch, 'lr: ', lr, ' Loss: ', all_loss * 1.0 / (batch_num + 1) * self.batch_size)
+
 
     # 预测
     def predict(self, word):
@@ -236,11 +214,12 @@ class LSTMDemo(object):
             results = []
             for weight in weights:
                 sample = np.argmax(weight)
-                results.append(words[sample])
+                results.append(self.vocab[sample])
             return results
 
         x = np.array([list(map(word_num_map.get, word))])
-
+        # #预测是时候重新分配模型的batch_size
+        # self.sess.run(tf.assign(self.batch_size , x.shape[0]))
         prob = self.sess.run(self.probs, feed_dict={self.input_data: x})
         pred_result = to_word(prob)
         print(pred_result)
@@ -253,18 +232,19 @@ class LSTMDemo(object):
         print('Model restored from {}='.format(latest_ckpt))
 
 
-def predict(words, word):
-    lstm = LSTMDemo(words,False)
+def predict(words, word,batch_size):
+    lstm = LSTMDemo(words,is_training=False,batch_size=batch_size)
     lstm.restore("D:\\myProject\\ml-nlp-dl-rl\\nlp-ml\\src\\main\\resources\\model\\protry_model\\")
     lstm.predict(word)
 
 
 if __name__ == '__main__':
-    word = ["e", "d", "c"]
-    lstm = LSTMDemo(words,True)
-    lstm.train_neural_network(500)
-    lstm.predict(word)
+    word = ["a"]
+    # train_datas = DataSet(data_vector= ranks_vector,word_num_map=word_num_map,filter_length=None)
+    # lstm = LSTMDemo(vocab=words,is_training=True,batch_size=1)
+    # lstm.train_neural_network(train_datas=train_datas,epoches=10000,isReTrain=False)
+    # lstm.predict(word=word)
 
 
-    # predict(words,word)
-    # print(words)
+    predict(words,word,batch_size=1)
+    print(words)

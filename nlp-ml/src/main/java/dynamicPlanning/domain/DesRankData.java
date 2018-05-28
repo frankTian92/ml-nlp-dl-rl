@@ -6,13 +6,11 @@ package dynamicPlanning.domain;
 public class DesRankData {
     private int des;
     private int rank;
-    private int deliveryArea;
 
-
-    public DesRankData(int des,int rank,int deliveryArea){
+    public DesRankData(int des,int rank){
         this.des = des;
         this.rank = rank;
-        this.deliveryArea = deliveryArea;
+
     }
 
     public int getDes() {
@@ -31,11 +29,18 @@ public class DesRankData {
         this.rank = rank;
     }
 
-    public int getDeliveryArea() {
-        return deliveryArea;
-    }
 
-    public void setDeliveryArea(int deliveryArea) {
-        this.deliveryArea = deliveryArea;
+
+    /**
+     * 判断是两者是否相同
+     * @param other
+     * @return
+     */
+    public boolean isEqual(DesRankData other){
+        if (des==other.des && rank == other.rank){
+            return true;
+        }else {
+            return false;
+        }
     }
 }

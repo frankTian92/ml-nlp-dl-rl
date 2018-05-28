@@ -84,10 +84,8 @@ public class WriteExcel {
                     row = sheet.createRow(j);
                     int rank = desRankData.getRank();
                     int desIndex= desRankData.getDes();
-                    int desArea = desRankData.getDeliveryArea();
                     String desName = desIndexNameMap.get(desIndex);
                     String desCode = desIndexCodeMap.get(desIndex);
-                    String area = DeliveryArea.getDeliveryAreaName(desArea);
 
                     Cell first = row.createCell(0);
                     first.setCellValue(zcdh);
@@ -97,8 +95,6 @@ public class WriteExcel {
                     third.setCellValue(desName);
                     Cell four = row.createCell(3);
                     four.setCellValue(rank);
-                    Cell five = row.createCell(4);
-                    five.setCellValue(area);
 
                     j+=1;
                 }
